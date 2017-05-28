@@ -3,6 +3,7 @@ function Role:init()
 	self.texture = cc.Director:getInstance():getTextureCache():addImage("mgd_03.png")
 	self:setTexture(self.texture)
 	self.spriteFrame = Const.roleFrame
+	self:addShadow()
 	-- self:setTextureRect(cc.rect(30,50,30,50))
 end
 
@@ -38,5 +39,12 @@ function Role:walkTo(direction)
 		self:setTextureRect(cc.rect(_x, _y, Const.roleWidth, Const.roleHeight))
 	end
 	schedule(self, c, 0.2)
+end
+
+function Role:addShadow()
+	display.newSprite("mgd_26.png")
+		:move(Const.roleWidth / 2, 0)
+		:setScale(0.2)
+		:addTo(self)
 end
 return Role

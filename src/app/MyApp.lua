@@ -16,7 +16,7 @@ function MyApp:onCreate()
 			"app.Const",
 			"app.GameClient",
 			"app.Utils",
-			"app.Module.Role",
+			"app.module.Role",
 			-- "src/app/views/MapScene",
 			-- "src/app/views/MainScene",
 		}
