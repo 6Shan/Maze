@@ -15,4 +15,8 @@ cc.exports.Const = {
 	road = 4,
 	clean = 5,
 
+	speed = 0.8,
+
+	idle = 1,
+	move = 2,
 }

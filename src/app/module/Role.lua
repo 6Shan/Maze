@@ -1,44 +1,77 @@
 local Role = class("Role", cc.Sprite)
-function Role:init()
+function Role:init(parent)
 	self.texture = cc.Director:getInstance():getTextureCache():addImage("mgd_03.png")
 	self:setTexture(self.texture)
-	self.spriteFrame = Const.roleFrame
+	self.spriteFrame = 1
 	self:addShadow()
 	-- self:setTextureRect(cc.rect(30,50,30,50))
+	self.walkSpeed = Const.speed / Const.roleFrame
+	self.parent = parent
 end
 
-local x = 32
-local y = 48
-local width = 32
-local height = 48
-
 function Role:walkTo(direction)
-	local _x, _y, _frame
-
-	local c = function ()
+	if self.state == Const.move then
+		return
+	end
+	local _frameX, _frameY, _frame, _x, _y
+	-- local c = function ()
+	-- 	_frame = self.spriteFrame % Const.roleFrame
+	-- 	self.spriteFrame = _frame + 1
+	-- 	_frameX = _frame * Const.roleWidth
+	-- 	_frameY = direction * Const.roleHeight
+	-- 	self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
+	-- end
+	-- schedule(self, c, 0.2)
+	
+	local _time = cc.DelayTime:create(self.walkSpeed)
+	local _call = cc.CallFunc:create(function()
 		_frame = self.spriteFrame % Const.roleFrame
 		self.spriteFrame = _frame + 1
-		_x = _frame * Const.roleWidth
-		_y = direction * Const.roleHeight
-		-- if i < 5 then
-		-- 	_x = x * (i - 1)
-		-- 	_y = 0
-		-- elseif i < 9 then
-		-- 	_x = x * (i - 5)
-		-- 	_y = y * 1
-		-- elseif i < 13 then
-		-- 	_x = x * (i - 9)
-		-- 	_y = y * 2
-		-- elseif i < 17 then
-		-- 	_x = x * (i - 13)
-		-- 	_y = y * 3
-		-- else
-		-- 	i = 1
-		-- end
-		-- i = i + 1
-		self:setTextureRect(cc.rect(_x, _y, Const.roleWidth, Const.roleHeight))
+		_frameX = _frame * Const.roleWidth
+		_frameY = direction * Const.roleHeight
+		self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
+	end)
+	local _seq = cc.Sequence:create(_call, _time)
+	self.moveAction = cc.RepeatForever:create(_seq)
+	self:runAction(self.moveAction)
+	if direction == Const.up then
+		_x = 0
+		_y = Const.roleHeight
+	elseif direction == Const.down then
+		_x = 0
+		_y = -Const.roleHeight
+	elseif direction == Const.left then
+		_x = -Const.roleHeight
+		_y = 0
+	elseif direction == Const.right then
+		_x = Const.roleHeight
+		_y = 0
 	end
-	schedule(self, c, 0.2)
+	local _posX, _posY = self:getPosition()
+	if not self.parent:checkMove(_posX + _x, _posY + _y) then
+		return
+	end
+	local _move = cc.MoveBy:create(Const.speed, cc.p(_x, _y))
+	_call = cc.CallFunc:create(function()
+		self.parent:checkEnd(self:getPosition())
+		if self.parent.pressBtn then
+			local _direction = self.parent.pressBtn:getTag()
+			self:idle(_direction)
+			self:walkTo(_direction)
+		else
+			self:idle(direction)
+		end
+	end)
+	_seq = cc.Sequence:create(_move, _call)
+	self:runAction(_seq)
+	self.state = Const.move
+end
+
+function Role:idle(direction)
+	local _frameX, _frameY = 0, direction * Const.roleHeight
+	self:stopAction(self.moveAction)
+	self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
+	self.state = Const.idle
 end
 
 function Role:addShadow()

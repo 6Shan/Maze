@@ -6,12 +6,8 @@ function Utils.printTable(...)
 	local args = {...}
 	local fromIndex = 1
 
-	if type(args[fromIndex]) == 'number' and GameClient.cfg.printCode then
-		if GameClient.cfg.printCode == args[fromIndex] then
-			fromIndex = fromIndex + 1
-		else
-			return
-		end
+	if type(args[fromIndex]) == 'number' then
+		return
 	end
 	for i = fromIndex, #args do
 		local root = args[i]

@@ -33,7 +33,7 @@ function EditScene:onCreate()
     			print("ccui.complete=======")
     			print(cc.FileUtils:getInstance():getWritablePath())
     			local fileUtil = cc.FileUtils:getInstance()
-    			local path = fileUtil:getWritablePath().."222.json"
+    			local path = fileUtil:getWritablePath().."map.lua"
     			local file = io.open(path, "w+b")
     			if file then
     				local str = Utils.serialize(self.mapArray)
@@ -208,7 +208,7 @@ function EditScene:initPanel(pointHeight, editHeight, mapHeight)
 					:addTo(self.mapLayer)
 	local _total = self.mapHeight / self.pointHeight
 	self.mapArray = {}
-	for i=0,_total do
+	for i=1,_total do
 		self.mapArray[i]={}
 		for j=1,_total do
 			self.mapArray[i][j] = 0
@@ -266,7 +266,7 @@ end
 function EditScene:changePos(pos)
 	local _x = math.floor(pos.x / self.pointHeight)
 	local _y = math.floor(pos.y / self.pointHeight)
-	return cc.p(_x * self.pointHeight, _y * self.pointHeight),_x,_y
+	return cc.p(_x * self.pointHeight, _y * self.pointHeight),_x + 1,_y + 1
 end
 function EditScene:setMapScale(scale)
 	if scale > self.maxScale then

@@ -6,14 +6,18 @@ require "app.Const"
 
 function MainScene:onCreate()
     -- -- add background image
-    -- display.newSprite("HelloWorld.png")
-    --     :move(display.center)
-    --     :addTo(self)
+    local _layer = display.newLayer(cc.c4b(255,255,255,255))
+            :setContentSize(640, 100)
+            :move(display.left, display.cy + 200)
+            :addTo(self)
+    display.newSprite("mgd_17.png")
+    	:move(display.cx, 15)
+        :addTo(_layer)
 
     -- add HelloWorld label
-    cc.Label:createWithSystemFont("Hello World", "Arial", 40)
-    	:move(display.cx, display.cy + 200)
-    	:addTo(self)
+    -- cc.Label:createWithSystemFont("Hello World", "Arial", 40)
+    -- 	:move(display.cx, display.cy + 200)
+    -- 	:addTo(self)
 
     ccui.Button:create("mgd_19.png")
     	:move(display.cx, display.cy - 200)

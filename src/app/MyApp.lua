@@ -17,6 +17,7 @@ function MyApp:onCreate()
 			"app.GameClient",
 			"app.Utils",
 			"app.module.Role",
+			"app.views.ClickLayer",
 			-- "src/app/views/MapScene",
 			-- "src/app/views/MainScene",
 		}
