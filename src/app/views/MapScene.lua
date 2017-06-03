@@ -60,53 +60,89 @@ function MapScene:onCreate()
 
     -- local walk = 
     self.upBtn = ccui.Button:create("mgd_29.png")
-                    :setScale(0.5, 0.7)
-                    :move(display.cx, display.bottom + 180)
+                    :setScale(1)
+                    :move(display.cx, display.bottom + 150)
                     :addTo(self)
                     :setZoomScale(0)
                     :setTag(Const.up)
+    self.upBtn:addTouchEventListener(function (sender, event) 
+            self:onTouchBtn(sender, event)
+        end)
     self.btnList[Const.up] = self.upBtn
+    local _size = self.upBtn:getContentSize()
+    cc.Label:createWithSystemFont("向前走", "Arial", 30)
+                :setColor(cc.c3b(0,0,0))
+                :move(_size.width / 2, _size.height + 15)
+                :addTo(self.upBtn)
     
     self.downBtn = ccui.Button:create("mgd_29.png")
-                    :setScale(0.5, -0.7)
-                    :move(display.cx, display.bottom + 20)
+                    :setScale(1, -1)
+                    :move(display.cx, display.bottom + 50)
                     :addTo(self)
                     :setZoomScale(0)
                     :setTag(Const.down)
+    self.downBtn:addTouchEventListener(function (sender, event) 
+            self:onTouchBtn(sender, event)
+        end)
     self.btnList[Const.down] = self.downBtn
+    cc.Label:createWithSystemFont("转身", "Arial", 30)
+                :setScaleY(-1)
+                :setColor(cc.c3b(0,0,0))
+                :move(_size.width / 2, -15)
+                :addTo(self.downBtn)
+    self.downBtn:setVisible(false)
 
     self.leftBtn = ccui.Button:create("mgd_30.png")
-                    :setScale(-0.5, 0.5)
-                    :move(display.cx - 120, display.bottom + 80)
+                    :setScale(-1, 1)
+                    :move(display.cx - 180, display.bottom + 60)
                     :addTo(self)
                     :setZoomScale(0)
                     :setTag(Const.left)
+    self.leftBtn:addTouchEventListener(function (sender, event) 
+            self:onTouchBtn(sender, event)
+        end)
     self.btnList[Const.left] = self.leftBtn
+    _size = self.leftBtn:getContentSize()
+    cc.Label:createWithSystemFont("向左走", "Arial", 30)
+                :setScaleX(-1)
+                :move(_size.width / 2 - 20, _size.height)
+                :setColor(cc.c3b(0,0,0))
+                :addTo(self.leftBtn)
     
     self.rightBtn = ccui.Button:create("mgd_30.png")
-                    :setScale(0.5)
-                    :move(display.cx + 120, display.bottom + 80)
+                    :setScale(1)
+                    :move(display.cx + 180, display.bottom + 60)
                     :addTo(self)
                     :setZoomScale(0)
                     :setTag(Const.right)
+    self.rightBtn:addTouchEventListener(function (sender, event) 
+            self:onTouchBtn(sender, event)
+        end)
     self.btnList[Const.right] = self.rightBtn
+    cc.Label:createWithSystemFont("向右走", "Arial", 30)
+            :move(_size.width / 2 - 20, _size.height)
+            :setColor(cc.c3b(0,0,0))
+            :addTo(self.rightBtn)
 
     -- Utils.printTable(Utils.unserialize(self:loadMap()))
     -- local role = cc.Sprite:create("mgd_28.png")
     -- cc.Sprite:create("mgd_28.png")
+
+
+    self.halfWalkHeight = Const.wallHeight /2
     self.mapConfig = Utils.unserialize(self:loadMap())
     self:creaeMap(self.mapConfig)
 
     local role = Role:new()
     role:init(self)
     role:setScale(2)
-    role:move(self.startPoint)
-    role:addTo(self.mapLayer)
+    role:move(display.cx, display.cy - Const.wallHeight)
+    role:addTo(self)
     role:idle(3)
     self.role = role
-    self.clickLayer = ClickLayer:new()
-    self.clickLayer:init(self.btnList, self)
-    self.clickLayer:addTo(self)
+    -- self.clickLayer = ClickLayer:new()
+    -- self.clickLayer:init(self.btnList, self)
+    -- self.clickLayer:addTo(self)
 
 end
 
@@ -125,7 +161,6 @@ end
 function MapScene:creaeMap(config)
     self.mapLayer = display.newLayer()
                     :addTo(self)
-                    :move(0,0)
     for x,tbl in ipairs(config) do
         for y,v in ipairs(tbl) do
             if v ~= 0 then
@@ -150,48 +185,53 @@ function MapScene:creaeMap(config)
                     self:addRightWall(x, y)
                 end
                 if v == Const.start then
-                    self.startPoint = cc.p(x * Const.roleHeight, y * Const.roleHeight)
+                    self.startPoint = cc.p(x * Const.wallHeight, y * Const.wallHeight)
+                    display.newSprite("mgd_10.png")
+                        :move(x * Const.wallHeight, y * Const.wallHeight)
+                        :setScale(0.9)
+                        :addTo(self.mapLayer)
                 elseif v == Const.ended then
-                    self.endPoint = cc.p(x * Const.roleHeight, y * Const.roleHeight)
+                    self.endPoint = cc.p(x * Const.wallHeight, y * Const.wallHeight)
                 end
             end
         end
     end
+    self.mapLayer:move(display.cx - self.startPoint.x, display.cy - self.startPoint.y - Const.wallHeight)
 end
 
 function MapScene:addUpWall(x, y)
     print("00000000addUpWall")
-    local _x = x * Const.roleHeight
-    local _y = y * Const.roleHeight
+    local _x = x * Const.wallHeight
+    local _y = y * Const.wallHeight
     display.newSprite("mgd_27.png")
-        :move(_x, _y + Const.roleHeight)
+        :move(_x, _y + self.halfWalkHeight)
         :setScale(-1)
         :addTo(self.mapLayer)
 end
 function MapScene:addDownWall(x, y)
     print("00000000addDownWall")
-    local _x = x * Const.roleHeight
-    local _y = y * Const.roleHeight
+    local _x = x * Const.wallHeight
+    local _y = y * Const.wallHeight
     display.newSprite("mgd_27.png")
-        :move(_x, _y - Const.roleHeight)
+        :move(_x, _y - self.halfWalkHeight)
         :setScale(1)
         :addTo(self.mapLayer)
 end
 function MapScene:addLeftWall(x, y)
     print("00000000addLeftWall")
-    local _x = x * Const.roleHeight
-    local _y = y * Const.roleHeight
+    local _x = x * Const.wallHeight
+    local _y = y * Const.wallHeight
     display.newSprite("mgd_07.png")
-        :move(_x - Const.roleHeight, _y)
+        :move(_x - self.halfWalkHeight, _y)
         :setScale(-1)
         :addTo(self.mapLayer)
 end
 function MapScene:addRightWall(x, y)
     print("00000000addRightWall")
-    local _x = x * Const.roleHeight
-    local _y = y * Const.roleHeight
+    local _x = x * Const.wallHeight
+    local _y = y * Const.wallHeight
     display.newSprite("mgd_07.png")
-        :move(_x + Const.roleHeight, _y)
+        :move(_x + self.halfWalkHeight, _y)
         :setScale(1)
         :addTo(self.mapLayer)
 end
