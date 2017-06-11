@@ -3,12 +3,12 @@ cc.exports.Const = {
 	roleWidth = 32,
 	roleHeight = 48,
 	roleFrame = 4,
-	wallHeight = 150,
+	wallHeight = 135,
 
 	down = 0,
 	left = 1,
-	right= 2,
-	up = 3,
+	up = 2,
+	right= 3,
 
 	start = 1,
 	ended = 2,
@@ -20,4 +20,14 @@ cc.exports.Const = {
 
 	idle = 1,
 	move = 2,
+
+	-- 参照Linux权限
+	noRoad = 0,
+	lRoad = 1,
+	uRoad = 2,
+	luRoad = 3,
+	rRoad = 4,
+	lrRoad = 5,
+	urRoad = 6,
+	lurRoad = 7,
 }

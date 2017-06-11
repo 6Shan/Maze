@@ -109,3 +109,12 @@ function Utils.unserialize(lua)
     end  
     return func()  
 end 
+
+-- function Utils.setGrey(obj)
+-- 	if not obj then
+-- 		return
+-- 	end
+-- 	local node = obj:getVirtualRenderer()
+-- 	node = tolua.cast(node, "ccui.Scale9Sprite")
+-- 	ShaderEffect.greyScale(node:getSprite())
+-- end

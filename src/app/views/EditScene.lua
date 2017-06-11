@@ -30,8 +30,6 @@ function EditScene:onCreate()
     	:addTo(self.complete)
     	:addTouchEventListener(function (sender, event) 
     		if event == ccui.TouchEventType.ended then
-    			print("ccui.complete=======")
-    			print(cc.FileUtils:getInstance():getWritablePath())
     			local fileUtil = cc.FileUtils:getInstance()
     			local path = fileUtil:getWritablePath().."map.lua"
     			local file = io.open(path, "w+b")
@@ -68,7 +66,22 @@ function EditScene:onCreate()
 			    	:move(display.left + 250, display.top - 150)
 			    	:addTo(self)
 			    	:addTouchEventListener(function (sender, event) 
-			    		-- body
+			    		if event == ccui.TouchEventType.ended then
+			    			if self.stepIndex == 0 then
+			    				return
+			    			end
+				    		local _step = self.stepList[self.stepIndex]
+			    			print("undo", self.stepIndex)
+			    			Utils.printTable(self.stepList)
+				    		for _,tbl in pairs(_step) do
+				    			if tbl[4] then
+			    					self:changeMaze(tbl[1], tbl[2], tbl[3])
+			    				else
+			    					self:changeMaze(tbl[1], tbl[2], Const.clean)
+			    				end
+				    		end
+				    		self.stepIndex = self.stepIndex - 1
+				    	end
 			    	end)
 
     self.redo = ccui.Button:create("mgd_28.png")
@@ -77,7 +90,22 @@ function EditScene:onCreate()
 			    	:move(display.right - 250, display.top - 150)
 			    	:addTo(self)
 					:addTouchEventListener(function (sender, event) 
-						-- body	
+						if event == ccui.TouchEventType.ended then
+							local _len = #self.stepList
+							if self.stepIndex == _len then
+								return
+							end
+							print("redo", self.stepIndex, _len)
+							self.stepIndex = self.stepIndex + 1
+				    		local _step = self.stepList[self.stepIndex]
+				    		for _,tbl in pairs(_step) do
+				    			if not tbl[4] then
+			    					self:changeMaze(tbl[1], tbl[2], tbl[3])
+			    				else
+			    					self:changeMaze(tbl[1], tbl[2], Const.clean)
+			    				end
+				    		end
+				    	end
 					end)
 
 	self.start = ccui.Button:create("mgd_10.png")
@@ -158,7 +186,6 @@ function EditScene:onCreate()
 						:move(cc.p(-200, -200))
 						:addTo(self)
 
-
 	self.scaleNum = 1
 end
 
@@ -196,11 +223,22 @@ function EditScene:initPanel(pointHeight, editHeight, mapHeight)
 			local _bool = false
 			_bool = cc.rectContainsPoint(self.editRect, cc.p(event.x, event.y))
 			if _bool then
+				if self.haveStart and self.state == Const.start then
+					return false
+				elseif self.haveEnded and self.state == Const.ended then
+					return false
+				end
+				self.step = {}
+				self.stepIndex = self.stepIndex + 1
+				self:saveStep(event.x, event.y)
 				self:changeMaze(event.x, event.y)
 			end
 			return _bool
 		elseif event.name == "moved" then
+			self:saveStep(event.x, event.y)
 			self:changeMaze(event.x, event.y)
+		elseif event.name == "ended" then
+			self.stepList[self.stepIndex] = self.step
 		end
 	end)
 
@@ -221,6 +259,9 @@ function EditScene:initPanel(pointHeight, editHeight, mapHeight)
 	end
 	self:selectState(Const.start, self.start)
 	self:setMapScale(self.minScale)
+
+	self.stepList = {}
+	self.stepIndex = 0
 end
 
 function EditScene:selectState(state, sender)
@@ -234,32 +275,59 @@ function EditScene:selectState(state, sender)
 	self.state = state
 end
 
-function EditScene:changeMaze(x, y)
+function EditScene:changeMaze(x, y, _state)
 	local _x, _y
 	local _pos = self.mapLayer:convertToNodeSpace(cc.p(x, y))
 	_pos,_x,_y = self:changePos(_pos)
-	if self.state == Const.start then
+	print(_x,_y,_state, debug.traceback())
+	_state = _state or self.state
+	print(_state)
+	if _state == Const.start then
 		if not self.haveStart then
-			self.mapArray[_x][_y] = self.state
+			self.mapArray[_x][_y] = _state
+			self.mapArray.start = cc.p(_x, _y)
 			self.lineNode:drawSolidRect(cc.p(_pos.x, _pos.y),
 				 cc.p(_pos.x + self.pointHeight, _pos.y + self.pointHeight), cc.c4f(0, 1, 0, 1))
 			self.haveStart = true
 		end
-	elseif self.state == Const.ended then
+	elseif _state == Const.ended then
 		if not self.haveEnded then
-			self.mapArray[_x][_y] = self.state
+			self.mapArray[_x][_y] = _state
+			self.mapArray.ended = cc.p(_x, _y)
 			self.lineNode:drawSolidRect(cc.p(_pos.x, _pos.y),
 				 cc.p(_pos.x + self.pointHeight, _pos.y + self.pointHeight), cc.c4f(1, 0, 0, 1))
 			self.haveEnded = true
 		end
-	elseif self.state == Const.road then
-		self.mapArray[_x][_y] = self.state
+	elseif _state == Const.road then
+		self.mapArray[_x][_y] = _state
 		self.lineNode:drawSolidRect(cc.p(_pos.x, _pos.y),
 				 cc.p(_pos.x + self.pointHeight, _pos.y + self.pointHeight), cc.c4f(0, 0, 0, 1))
-	elseif self.state == Const.clean then
+	elseif _state == Const.clean then
+		if self.mapArray[_x][_y] == Const.start then
+			self.haveStart = nil
+		elseif self.mapArray[_x][_y] == Const.ended then
+			self.haveEnded = nil
+		end
 		self.mapArray[_x][_y] = 0
 		self.lineNode:drawSolidRect(cc.p(_pos.x, _pos.y),
 				 cc.p(_pos.x + self.pointHeight, _pos.y + self.pointHeight),  cc.c4f(1, 1, 1, 1))
+	end
+end
+
+function EditScene:saveStep(x, y)
+	local _x, _y
+	local _pos = self.mapLayer:convertToNodeSpace(cc.p(x, y))
+	_pos,_x,_y = self:changePos(_pos)
+	local _len = #self.stepList - 1
+	for i=self.stepIndex,_len do
+		self.stepList[i] = nil
+	end
+	if self.state == Const.clean then
+		if self.mapArray[_x][_y] ~= 0 then
+			table.insert(self.step, {x, y, self.mapArray[_x][_y]}, true)
+		end
+	else
+		table.insert(self.step, {x, y, self.state})
 	end
 end
 
@@ -268,6 +336,7 @@ function EditScene:changePos(pos)
 	local _y = math.floor(pos.y / self.pointHeight)
 	return cc.p(_x * self.pointHeight, _y * self.pointHeight),_x + 1,_y + 1
 end
+
 function EditScene:setMapScale(scale)
 	if scale > self.maxScale then
 		scale = self.maxScale

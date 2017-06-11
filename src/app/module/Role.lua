@@ -9,67 +9,41 @@ function Role:init(parent)
 	self.parent = parent
 end
 
-function Role:walkTo(direction)
+function Role:walkTo()
 	if self.state == Const.move then
 		return
 	end
 	local _frameX, _frameY, _frame, _x, _y
-	-- local c = function ()
-	-- 	_frame = self.spriteFrame % Const.roleFrame
-	-- 	self.spriteFrame = _frame + 1
-	-- 	_frameX = _frame * Const.roleWidth
-	-- 	_frameY = direction * Const.roleHeight
-	-- 	self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
-	-- end
-	-- schedule(self, c, 0.2)
 	
 	local _time = cc.DelayTime:create(self.walkSpeed)
 	local _call = cc.CallFunc:create(function()
 		_frame = self.spriteFrame % Const.roleFrame
 		self.spriteFrame = _frame + 1
 		_frameX = _frame * Const.roleWidth
-		_frameY = direction * Const.roleHeight
+		_frameY = 3 * Const.roleHeight
 		self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
 	end)
 	local _seq = cc.Sequence:create(_call, _time)
 	self.moveAction = cc.RepeatForever:create(_seq)
 	self:runAction(self.moveAction)
-	if direction == Const.up then
-		_x = 0
-		_y = Const.roleHeight
-	elseif direction == Const.down then
-		_x = 0
-		_y = -Const.roleHeight
-	elseif direction == Const.left then
-		_x = -Const.roleHeight
-		_y = 0
-	elseif direction == Const.right then
-		_x = Const.roleHeight
-		_y = 0
-	end
-	local _posX, _posY = self:getPosition()
-	if not self.parent:checkMove(_posX + _x, _posY + _y) then
-		return
-	end
-	local _move = cc.MoveBy:create(Const.speed, cc.p(_x, _y))
-	_call = cc.CallFunc:create(function()
-		self.parent:checkEnd(self:getPosition())
-		if self.parent.pressBtn then
-			local _direction = self.parent.pressBtn:getTag()
-			self:idle(_direction)
-			self:walkTo(_direction)
-		else
-			self:idle(direction)
-		end
-	end)
-	_seq = cc.Sequence:create(_move, _call)
-	self:runAction(_seq)
 	self.state = Const.move
 end
 
-function Role:idle(direction)
-	local _frameX, _frameY = 0, direction * Const.roleHeight
-	self:stopAction(self.moveAction)
+function Role:startMove()
+	local _move = cc.MoveBy:create(Const.speed, cc.p(0, Const.wallHeight))
+	local _call = cc.CallFunc:create(function ()
+		self.parent.mapLayer:checkMove()
+	end)
+	local _seq = cc.Sequence:create(_move, _call)
+	self:walkTo()
+	self:runAction(_seq)
+end
+
+function Role:idle()
+	local _frameX, _frameY = 0, 3 * Const.roleHeight
+	if self.moveAction then
+		self:stopAction(self.moveAction)
+	end
 	self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
 	self.state = Const.idle
 end
