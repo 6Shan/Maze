@@ -20,7 +20,7 @@ function Wall:init(parent)
     self.mapScale = 1 / self.mapXLen
     self:checkStart()
 
-    -- self:addTouch()
+    self:addTouch()
 end
 
 function Wall:createMap(config)
@@ -78,6 +78,7 @@ function Wall:addUpWall(x, y)
     local _y = y * Const.wallHeight
     local _sprite = display.newSprite("mgd_27.png")
         :move(_x, _y + self.halfWalkHeight)
+        :setAnchorPoint(0.5, 1)
         :setScale(-1)
         :addTo(self)
         :setVisible(false)
@@ -89,6 +90,7 @@ function Wall:addDownWall(x, y)
     local _y = y * Const.wallHeight
     local _sprite = display.newSprite("mgd_27.png")
         :move(_x, _y - self.halfWalkHeight)
+        :setAnchorPoint(0.5, 1)
         :setScale(1)
         :addTo(self)
         :setVisible(false)
@@ -100,6 +102,7 @@ function Wall:addLeftWall(x, y)
     local _y = y * Const.wallHeight
     local _sprite = display.newSprite("mgd_07.png")
         :move(_x - self.halfWalkHeight, _y)
+        :setAnchorPoint(0, 0.5)
         :setScale(-1)
         :addTo(self)
         :setVisible(false)
@@ -111,6 +114,7 @@ function Wall:addRightWall(x, y)
     local _y = y * Const.wallHeight
     local _sprite = display.newSprite("mgd_07.png")
         :move(_x + self.halfWalkHeight, _y)
+        :setAnchorPoint(0, 0.5)
         :setScale(1)
         :addTo(self)
         :setVisible(false)
@@ -248,6 +252,7 @@ function Wall:checkShowPoint(x, y)
 	end
     for _,v in pairs(self.showPoint) do
         for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
+            node:setOpacity(255)
             node:setVisible(true)
         end
     end
@@ -258,7 +263,8 @@ function Wall:hide(x, y)
         for k,v in pairs(self.preShowPoint) do
             if (v[1] < x-1 or v[1] > x+1) or (v[2] < y-1 or v[2] > y+2) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
-                    node:setVisible(false)
+                    -- node:setVisible(false)
+                    node:runAction(cc.FadeOut:create(Const.speed))
                 end
             end
         end
@@ -266,7 +272,8 @@ function Wall:hide(x, y)
         for k,v in pairs(self.preShowPoint) do
             if (v[1] < x-1 or v[1] > x+1) or (v[2] < y-2 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
-                    node:setVisible(false)
+                    -- node:setVisible(false)
+                    node:runAction(cc.FadeOut:create(Const.speed))
                 end
             end
         end
@@ -274,7 +281,8 @@ function Wall:hide(x, y)
         for k,v in pairs(self.preShowPoint) do
             if (v[1] < x-2 or v[1] > x+1) or (v[2] < y-1 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
-                    node:setVisible(false)
+                    -- node:setVisible(false)
+                    node:runAction(cc.FadeOut:create(Const.speed))
                 end
             end
         end
@@ -282,7 +290,8 @@ function Wall:hide(x, y)
         for k,v in pairs(self.preShowPoint) do
             if (v[1] < x-1 or v[1] > x+2) or (v[2] < y-1 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
-                    node:setVisible(false)
+                    -- node:setVisible(false)
+                    node:runAction(cc.FadeOut:create(Const.speed))
                 end
             end
         end
@@ -295,15 +304,31 @@ function Wall:turn(direction)
     end
     self.moving = true
     print("Wall:turn", direction, self.direction)
-    self:changeAnchorPoint()
     self.parent.role:walkTo()
-    local _nextDir
+    local _nextDir, _rotate
     if direction == Const.left then
         _nextDir = (self.direction + 4 - 1) % 4
     else
         _nextDir = (self.direction + 1) % 4
     end
 
+    if self.pirouette then
+        self.pirouette = nil
+        self:changeAnchorPoint()
+        if direction == Const.left then
+            _rotate = cc.RotateBy:create(Const.speed, 90)
+        else
+            _rotate = cc.RotateBy:create(Const.speed, -90)
+        end
+        self.direction = _nextDir
+        local _call = cc.CallFunc:create(function ()
+            self:checkMove()
+        end)
+        local _seq = cc.Sequence:create(_rotate, _call)
+    
+        self:runAction(_seq)
+        return
+    end
     local _situation
     if self.direction == Const.up then
         _situation = self:checkAround(self.idleX, self.idleY + 1, _nextDir)
@@ -320,131 +345,71 @@ function Wall:turn(direction)
         _situation ~= Const.uRoad then
         _stop = true
     end
-    if _stop then
-        local _move
-        if direction == Const.left then
-            if self.direction == Const.up then
-                self.direction = Const.left
-                self:checkShowPoint(self.idleX, self.idleY + 1)
-            elseif self.direction == Const.left then
-                self.direction = Const.down
-                self:checkShowPoint(self.idleX - 1, self.idleY)
-            elseif self.direction == Const.down then
-                self.direction = Const.right
-                self:checkShowPoint(self.idleX, self.idleY - 1)
-            elseif self.direction == Const.right then
-                self.direction = Const.up
-                self:checkShowPoint(self.idleX + 1, self.idleY)
-            end
-            local bezier = {
-                    cc.p(0, 0),
-                    cc.p(-self.halfWalkHeight*0.5, -self.halfWalkHeight),
-                    cc.p(-Const.wallHeight,0),
-                }
-            local _bezier = cc.CardinalSplineBy:create(Const.speed * 2, bezier, 0)
-                
-            local _rotate = cc.RotateBy:create(Const.speed * 2, 90)
-            local _spawn = cc.Spawn:create(_bezier, _rotate)
-            local _call = cc.CallFunc:create(function ()
-                self:checkMove()
-            end)
-            local _seq = cc.Sequence:create(_spawn, _call)
-            self:runAction(_seq)
-        else
-            if self.direction == Const.up then
-                self.direction = Const.right
-                self:checkShowPoint(self.idleX, self.idleY + 1)
-            elseif self.direction == Const.left then
-                self.direction = Const.up
-                self:checkShowPoint(self.idleX - 1, self.idleY)
-            elseif self.direction == Const.down then
-                self.direction = Const.left
-                self:checkShowPoint(self.idleX, self.idleY - 1)
-            elseif self.direction == Const.right then
-                self.direction = Const.down
-                self:checkShowPoint(self.idleX + 1, self.idleY)
-            end
-            local bezier = {
-                    cc.p(0, 0),
-                    cc.p(self.halfWalkHeight*0.5, -self.halfWalkHeight),
-                    cc.p(Const.wallHeight,0),
-                }
-            local _bezier = cc.CardinalSplineBy:create(Const.speed * 2, bezier, 0)
-                
-            local _rotate = cc.RotateBy:create(Const.speed * 2, -90)
-            local _spawn = cc.Spawn:create(_bezier, _rotate)
-            local _call = cc.CallFunc:create(function ()
-                self:checkMove()
-            end)
-            local _seq = cc.Sequence:create(_spawn, _call)
-            self:runAction(_seq)
+    if direction == Const.left then
+        if self.direction == Const.up then
+            self.direction = Const.left
+            self:checkShowPoint(self.idleX, self.idleY + 1)
+        elseif self.direction == Const.left then
+            self.direction = Const.down
+            self:checkShowPoint(self.idleX - 1, self.idleY)
+        elseif self.direction == Const.down then
+            self.direction = Const.right
+            self:checkShowPoint(self.idleX, self.idleY - 1)
+        elseif self.direction == Const.right then
+            self.direction = Const.up
+            self:checkShowPoint(self.idleX + 1, self.idleY)
         end
+        _rotate = cc.RotateBy:create(Const.speed * 2, 90)
     else
-        if direction == Const.left then
-            if self.direction == Const.up then
-                self.direction = Const.left
-                self:checkShowPoint(self.idleX - 1, self.idleY + 1)
-            elseif self.direction == Const.left then
-                self.direction = Const.down
-                self:checkShowPoint(self.idleX - 1, self.idleY - 1)
-            elseif self.direction == Const.down then
-                self.direction = Const.right
-                self:checkShowPoint(self.idleX + 1, self.idleY - 1)
-            elseif self.direction == Const.right then
-                self.direction = Const.up
-                self:checkShowPoint(self.idleX + 1, self.idleY + 1)
-            end
-            local bezier = {
-                cc.p(0, 0),
-                cc.p(-self.halfWalkHeight / 2, -self.halfWalkHeight),
-                cc.p(-self.halfWalkHeight*1.5, -self.halfWalkHeight*1.5),
-                cc.p(-Const.wallHeight, -Const.wallHeight),
-            }
-            local _bezier = cc.CardinalSplineBy:create(Const.speed * 2, bezier, 0)
-            local _rotate = cc.RotateBy:create(Const.speed * 2, 90)
-            local _spawn = cc.Spawn:create(_bezier, _rotate)
-            local _call = cc.CallFunc:create(function ()
-                self:checkMove()
-            end)
-            local _seq = cc.Sequence:create(_spawn, _call)
-            self:runAction(_seq)
-        else
-            if self.direction == Const.up then
-                self.direction = Const.right
-                self:checkShowPoint(self.idleX + 1, self.idleY + 1)
-            elseif self.direction == Const.left then
-                self.direction = Const.up
-                self:checkShowPoint(self.idleX - 1, self.idleY + 1)
-            elseif self.direction == Const.down then
-                self.direction = Const.left
-                self:checkShowPoint(self.idleX - 1, self.idleY - 1)
-            elseif self.direction == Const.right then
-                self.direction = Const.down
-                self:checkShowPoint(self.idleX + 1, self.idleY - 1)
-            end
-            local bezier = {
-                cc.p(0, 0),
-                cc.p(self.halfWalkHeight / 2, -self.halfWalkHeight),
-                cc.p(self.halfWalkHeight*1.5, -self.halfWalkHeight*1.5),
-                cc.p(Const.wallHeight, -Const.wallHeight),
-            }
-            local _bezier = cc.CardinalSplineBy:create(Const.speed * 2, bezier, 0)
-            local _rotate = cc.RotateBy:create(Const.speed * 2, -90)
-            local _spawn = cc.Spawn:create(_bezier, _rotate)
-            local _call = cc.CallFunc:create(function ()
-                self:checkMove()
-            end)
-            local _seq = cc.Sequence:create(_spawn, _call)
-            self:runAction(_seq)
+        if self.direction == Const.up then
+            self.direction = Const.right
+            self:checkShowPoint(self.idleX, self.idleY + 1)
+        elseif self.direction == Const.left then
+            self.direction = Const.up
+            self:checkShowPoint(self.idleX - 1, self.idleY)
+        elseif self.direction == Const.down then
+            self.direction = Const.left
+            self:checkShowPoint(self.idleX, self.idleY - 1)
+        elseif self.direction == Const.right then
+            self.direction = Const.down
+            self:checkShowPoint(self.idleX + 1, self.idleY)
         end
+        _rotate = cc.RotateBy:create(Const.speed * 2, -90)
     end
+    local _move = cc.MoveBy:create(Const.speed, cc.p(0, -Const.wallHeight))
+    local _delay = cc.DelayTime:create(0.3)
+    local _call1 = cc.CallFunc:create(function ()
+        self:changeAnchorPoint()
+    end)
+    -- local _spawn = cc.Spawn:create(_bezier, _rotate)
+    local _call = cc.CallFunc:create(function ()
+        if _stop then
+            self:checkMove()
+        else
+            self:hide(self.idleX, self.idleY)
+            if self.direction == Const.up then
+                self:checkShowPoint(self.idleX, self.idleY + 1)
+            elseif self.direction == Const.left then
+                self:checkShowPoint(self.idleX - 1, self.idleY)
+            elseif self.direction == Const.down then
+                self:checkShowPoint(self.idleX, self.idleY - 1)
+            elseif self.direction == Const.right then
+                self:checkShowPoint(self.idleX + 1, self.idleY)
+            end
+            self:runAction(cc.Sequence:create(_move, cc.CallFunc:create(function ()
+                self:checkMove()
+            end)))
+        end
+    end)
+    local _seq = cc.Sequence:create(_move, _call1, _delay, _rotate, _call)
+    self:hide(self.idleX, self.idleY)
+    self:runAction(_seq)
 end
 
 function Wall:goAhead()
     if self.moving then
         return
     end
-    print("sodifsdfio",debug.traceback())
     self.moving = true
     if self.direction == Const.up then
         self:checkShowPoint(self.idleX, self.idleY + 1)
@@ -461,6 +426,7 @@ function Wall:goAhead()
         self:checkMove()
     end)
     local _seq = cc.Sequence:create(_move, _call)
+    self:hide(self.idleX, self.idleY)
     self:runAction(_seq)
 end
 function Wall:reverse()
@@ -483,6 +449,7 @@ function Wall:reverse()
         self:checkMove()
     end)
     local _seq = cc.Sequence:create(_rotate, _call)
+    self:hide(self.idleX, self.idleY)
     self:runAction(_seq)
 end
 function Wall:changeAnchorPoint()
@@ -490,18 +457,18 @@ function Wall:changeAnchorPoint()
     self:setPosition(self.idleX*-Const.wallHeight, self.idleY*-Const.wallHeight)
 end
 
--- function Wall:setAnchorPoint(x, y)
---     local _aPoint = self:getAnchorPoint()
---     local _size = self:getContentSize()
---     local _x = x * self.mapWidth
---     local _y = y * self.mapHeight
---     display.newSprite("mgd_10.png")
---         :move(_x, _y)
---         :setScale(0.2)
---         :addTo(self)
---     local metatable = getmetatable(self)
---     metatable.setAnchorPoint(self, x, y)
--- end
+function Wall:setAnchorPoint(x, y)
+    local _aPoint = self:getAnchorPoint()
+    local _size = self:getContentSize()
+    local _x = x * self.mapWidth
+    local _y = y * self.mapHeight
+    display.newSprite("mgd_10.png")
+        :move(_x, _y)
+        :setScale(0.2)
+        :addTo(self)
+    local metatable = getmetatable(self)
+    metatable.setAnchorPoint(self, x, y)
+end
 
 function Wall:addTouch()
     self:onTouch(function (event)
@@ -522,7 +489,7 @@ function Wall:checkMove()
     local _x = self.idleX
     local _y = self.idleY
     self.moving = nil
-    self:hide(self.idleX, self.idleY)
+    -- self:hide(self.idleX, self.idleY)
     if self:checkEnd(_x, _y) then
         self.parent.role:idle()
         local _layer = display.newLayer(cc.c4b(0,0,0,255))
@@ -565,6 +532,7 @@ function Wall:checkMove()
     self.parent:greyLBtn(_l)
     self.parent:greyRBtn(_r)
     self.parent:greyDBtn(_d)
+
 end
 
 function Wall:checkAround(_x, _y, _direction)
@@ -590,7 +558,13 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-
+            self.pirouette = true
+            if self:checkNum(_x-1, _y) then
+                _situation = 1 + _situation
+            end
+            if self:checkNum(_x+1, _y) then
+                _situation = 4 + _situation
+            end
         end
     elseif _direction == Const.left then
         if self:checkNum(_x-1, _y) then
@@ -612,7 +586,13 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-
+            self.pirouette = true
+            if self:checkNum(_x, _y-1) then
+                _situation = 1 + _situation
+            end
+            if self:checkNum(_x, _y+1) then
+                _situation = 4 + _situation
+            end
         end
 
     elseif _direction == Const.down then
@@ -635,7 +615,13 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-
+            self.pirouette = true
+            if self:checkNum(_x+1, _y) then
+                _situation = 1 + _situation
+            end
+            if self:checkNum(_x-1, _y) then
+                _situation = 4 + _situation
+            end
         end
     elseif _direction == Const.right then
         if self:checkNum(_x+1, _y) then
@@ -657,10 +643,16 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-
+            self.pirouette = true
+            if self:checkNum(_x, _y+1) then
+                _situation = 1 + _situation
+            end
+            if self:checkNum(_x, _y-1) then
+                _situation = 4 + _situation
+            end
         end
     end
-    print(_situation, "_situation")
+    print(_situation, "_situation",debug.traceback())
     return _situation
 end
 
@@ -673,20 +665,33 @@ end
 
 function Wall:checkStart()
     local _situation
-    for i=0,3 do
-        _situation = self:checkAround(self.startPoint.x, self.startPoint.y, i)
-        if _situation ~= Const.noRoad then
-            self.direction = i
-            break
-        end
+    -- for i=0,3 do
+    --     _situation = self:checkAround(self.startPoint.x, self.startPoint.y, i)
+    --     if _situation ~= Const.noRoad and _situation ~= Const.lRoad 
+    --         and _situation ~= Const.rRoad and _situation ~= Const.lrRoad then
+    --         self.direction = i
+    --         break
+    --     end
+    -- end
+    local _x, _y = self.startPoint.x, self.startPoint.y
+    if self.config[_x][_y+1] then
+        self.direction = Const.up
+    elseif self.config[_x][_y-1] then
+        self.direction = Const.down
+    elseif self.config[_x-1][_y] then
+        self.direction = Const.left
+    elseif self.config[_x+1][_y] then
+        self.direction = Const.right
     end
     if self.direction == Const.up then
         self:checkShowPoint(self.startPoint.x, self.startPoint.y + 1)
     elseif self.direction == Const.left then
         self:checkShowPoint(self.startPoint.x - 1, self.startPoint.y)
-        self:setRotation(-90)
+        self:changeAnchorPoint()
+        self:setRotation(90)
     elseif self.direction == Const.right then
         self:checkShowPoint(self.startPoint.x + 1, self.startPoint.y)
+        self:changeAnchorPoint()
         self:setRotation(-90)
     elseif self.direction == Const.down then
         self:checkShowPoint(self.startPoint.x, self.startPoint.y - 1)

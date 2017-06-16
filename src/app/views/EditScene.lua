@@ -324,7 +324,7 @@ function EditScene:saveStep(x, y)
 	end
 	if self.state == Const.clean then
 		if self.mapArray[_x][_y] ~= 0 then
-			table.insert(self.step, {x, y, self.mapArray[_x][_y]}, true)
+			table.insert(self.step, {x, y, self.mapArray[_x][_y], true})
 		end
 	else
 		table.insert(self.step, {x, y, self.state})
