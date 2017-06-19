@@ -5,17 +5,20 @@ function MyApp:onCreate()
     math.randomseed(os.time())
 
     local targetPlatform = cc.Application:getInstance():getTargetPlatform()
+
 	local function reload()
 		local s = {
 			"app.views.EditScene",
 			"app.views.MapScene",
 			"app.views.MainScene",
+			"app.views.LevelScene",
+			"app.views.ReadyScene",
 			"app.Const",
 			"app.GameClient",
 			"app.Utils",
 			"app.module.Role",
-			"app.views.ClickLayer",
 			"app.module.Wall",
+			
 			-- "src/app/views/MapScene",
 			-- "src/app/views/MainScene",
 		}

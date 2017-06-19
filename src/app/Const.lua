@@ -3,7 +3,7 @@ cc.exports.Const = {
 	roleWidth = 32,
 	roleHeight = 48,
 	roleFrame = 4,
-	wallHeight = 135,
+	wallHeight = 177,
 
 	down = 0,
 	left = 1,

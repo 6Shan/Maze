@@ -34,7 +34,7 @@ function EditScene:onCreate()
     			local path = fileUtil:getWritablePath().."map.lua"
     			local file = io.open(path, "w+b")
     			if file then
-    				local str = Utils.serialize(self.mapArray)
+    				local str = Utils.saveDate(self.mapArray)
     				file:write(str)
     				io.close(file)
     			end
@@ -63,7 +63,7 @@ function EditScene:onCreate()
 
     self.undo = ccui.Button:create("mgd_28.png")
     				:setScale(0.15)
-			    	:move(display.left + 250, display.top - 150)
+			    	:move(display.cx - 70, display.top - 150)
 			    	:addTo(self)
 			    	:addTouchEventListener(function (sender, event) 
 			    		if event == ccui.TouchEventType.ended then
@@ -87,7 +87,7 @@ function EditScene:onCreate()
     self.redo = ccui.Button:create("mgd_28.png")
     				:setScaleX(-0.15)
     				:setScaleY(0.15)
-			    	:move(display.right - 250, display.top - 150)
+			    	:move(display.cx + 70, display.top - 150)
 			    	:addTo(self)
 					:addTouchEventListener(function (sender, event) 
 						if event == ccui.TouchEventType.ended then
@@ -191,7 +191,7 @@ end
 
 function EditScene:initPanel(pointHeight, editHeight, mapHeight)
 	self.pointHeight = height or 54
-	self.editHeight = editHeight or 580
+	self.editHeight = editHeight or 530
 	self.mapHeight = mapHeight or 1350
 	self.minScale = self.editHeight / self.mapHeight
 	self.maxScale = 1

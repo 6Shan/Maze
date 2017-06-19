@@ -109,12 +109,43 @@ function Utils.unserialize(lua)
     end  
     return func()  
 end 
+function Utils.saveDate(obj)  
+    local lua = ""  
+    local t = type(obj)  
+    if t == "number" then  
+        lua = lua .. obj  
+    elseif t == "boolean" then  
+        lua = lua .. tostring(obj)  
+    elseif t == "string" then  
+        lua = lua .. string.format("%q", obj)  
+    elseif t == "table" then  
+        lua = lua .. "{"  
+    for k, v in pairs(obj) do  
+        lua = lua .. "[" .. Utils.serialize(k) .. "]=" .. Utils.serialize(v) .. ","  
+    end  
+    local metatable = getmetatable(obj)  
+        if metatable ~= nil and type(metatable.__index) == "table" then  
+        for k, v in pairs(metatable.__index) do  
+            lua = lua .. "[" .. Utils.serialize(k) .. "]=" .. Utils.serialize(v) .. ","  
+        end  
+    end  
+        lua = "return " .. lua .. "}"
+    elseif t == "nil" then  
+        return nil  
+    else  
+        error("can not serialize a " .. t .. " type.")  
+    end  
+    return lua  
+end
 
--- function Utils.setGrey(obj)
--- 	if not obj then
--- 		return
--- 	end
--- 	local node = obj:getVirtualRenderer()
--- 	node = tolua.cast(node, "ccui.Scale9Sprite")
--- 	ShaderEffect.greyScale(node:getSprite())
--- end
+function Utils.getAllConfig(configType)
+	if _G[configType] then
+		return _G[configType]
+	end
+	local str = "src/config/" .. configType
+	local c = require(str)
+	if c == true then
+		return _G[configType]
+	end
+	return nil
+end

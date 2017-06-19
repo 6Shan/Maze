@@ -43,6 +43,7 @@ function Role:idle()
 	local _frameX, _frameY = 0, 3 * Const.roleHeight
 	if self.moveAction then
 		self:stopAction(self.moveAction)
+		self.moveAction = nil
 	end
 	self:setTextureRect(cc.rect(_frameX, _frameY, Const.roleWidth, Const.roleHeight))
 	self.state = Const.idle

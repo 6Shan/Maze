@@ -20,7 +20,7 @@ function Wall:init(parent)
     self.mapScale = 1 / self.mapXLen
     self:checkStart()
 
-    self:addTouch()
+    -- self:addTouch()
 end
 
 function Wall:createMap(config)
@@ -131,7 +131,7 @@ function Wall:checkShowPoint(x, y)
 	self.idleX = x
     self.idleY = y
     local _x, _y
-    self.preShowPoint = clone(self.showPoint)
+    self:hide(x,y)
     self.showPoint = {}
 	if self.direction == Const.up then
 		if self:checkNum(x, y+1) then
@@ -185,9 +185,11 @@ function Wall:checkShowPoint(x, y)
         else
             table.insert(self.showPoint, {x, y})
             _x = x - 2
-            for i=1,3 do
-                if self:checkNum(_x+i, y+1) then
-                    table.insert(self.showPoint, {_x+i, y+1})
+            for j=1,2 do
+                for i=1,3 do
+                    if self:checkNum(_x+i, y+1) then
+                        table.insert(self.showPoint, {_x+i, y+1})
+                    end
                 end
             end
         end
@@ -260,7 +262,7 @@ end
 
 function Wall:hide(x, y)
 	if self.direction == Const.up then
-        for k,v in pairs(self.preShowPoint) do
+        for k,v in pairs(self.showPoint) do
             if (v[1] < x-1 or v[1] > x+1) or (v[2] < y-1 or v[2] > y+2) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
                     -- node:setVisible(false)
@@ -269,7 +271,7 @@ function Wall:hide(x, y)
             end
         end
     elseif self.direction == Const.down then
-        for k,v in pairs(self.preShowPoint) do
+        for k,v in pairs(self.showPoint) do
             if (v[1] < x-1 or v[1] > x+1) or (v[2] < y-2 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
                     -- node:setVisible(false)
@@ -278,7 +280,7 @@ function Wall:hide(x, y)
             end
         end
     elseif self.direction == Const.left then
-        for k,v in pairs(self.preShowPoint) do
+        for k,v in pairs(self.showPoint) do
             if (v[1] < x-2 or v[1] > x+1) or (v[2] < y-1 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
                     -- node:setVisible(false)
@@ -287,7 +289,7 @@ function Wall:hide(x, y)
             end
         end
     elseif self.direction == Const.right then
-        for k,v in pairs(self.preShowPoint) do
+        for k,v in pairs(self.showPoint) do
             if (v[1] < x-1 or v[1] > x+2) or (v[2] < y-1 or v[2] > y+1) then
                 for _,node in pairs(self.mapData[v[1]][v[2]].nodeList) do
                     -- node:setVisible(false)
@@ -311,7 +313,6 @@ function Wall:turn(direction)
     else
         _nextDir = (self.direction + 1) % 4
     end
-
     if self.pirouette then
         self.pirouette = nil
         self:changeAnchorPoint()
@@ -340,7 +341,6 @@ function Wall:turn(direction)
         _situation = self:checkAround(self.idleX + 1, self.idleY, _nextDir)
     end
     local _stop = nil
-    print("sdfposdpp",_situation)
     if _situation ~= Const.noRoad and 
         _situation ~= Const.uRoad then
         _stop = true
@@ -386,7 +386,6 @@ function Wall:turn(direction)
         if _stop then
             self:checkMove()
         else
-            self:hide(self.idleX, self.idleY)
             if self.direction == Const.up then
                 self:checkShowPoint(self.idleX, self.idleY + 1)
             elseif self.direction == Const.left then
@@ -402,7 +401,6 @@ function Wall:turn(direction)
         end
     end)
     local _seq = cc.Sequence:create(_move, _call1, _delay, _rotate, _call)
-    self:hide(self.idleX, self.idleY)
     self:runAction(_seq)
 end
 
@@ -426,7 +424,6 @@ function Wall:goAhead()
         self:checkMove()
     end)
     local _seq = cc.Sequence:create(_move, _call)
-    self:hide(self.idleX, self.idleY)
     self:runAction(_seq)
 end
 function Wall:reverse()
@@ -449,7 +446,6 @@ function Wall:reverse()
         self:checkMove()
     end)
     local _seq = cc.Sequence:create(_rotate, _call)
-    self:hide(self.idleX, self.idleY)
     self:runAction(_seq)
 end
 function Wall:changeAnchorPoint()
@@ -457,18 +453,18 @@ function Wall:changeAnchorPoint()
     self:setPosition(self.idleX*-Const.wallHeight, self.idleY*-Const.wallHeight)
 end
 
-function Wall:setAnchorPoint(x, y)
-    local _aPoint = self:getAnchorPoint()
-    local _size = self:getContentSize()
-    local _x = x * self.mapWidth
-    local _y = y * self.mapHeight
-    display.newSprite("mgd_10.png")
-        :move(_x, _y)
-        :setScale(0.2)
-        :addTo(self)
-    local metatable = getmetatable(self)
-    metatable.setAnchorPoint(self, x, y)
-end
+-- function Wall:setAnchorPoint(x, y)
+--     local _aPoint = self:getAnchorPoint()
+--     local _size = self:getContentSize()
+--     local _x = x * self.mapWidth
+--     local _y = y * self.mapHeight
+--     display.newSprite("mgd_10.png")
+--         :move(_x, _y)
+--         :setScale(0.2)
+--         :addTo(self)
+--     local metatable = getmetatable(self)
+--     metatable.setAnchorPoint(self, x, y)
+-- end
 
 function Wall:addTouch()
     self:onTouch(function (event)
@@ -489,7 +485,6 @@ function Wall:checkMove()
     local _x = self.idleX
     local _y = self.idleY
     self.moving = nil
-    -- self:hide(self.idleX, self.idleY)
     if self:checkEnd(_x, _y) then
         self.parent.role:idle()
         local _layer = display.newLayer(cc.c4b(0,0,0,255))
@@ -506,6 +501,7 @@ function Wall:checkMove()
     if _situation == Const.noRoad then
         _l = false; _r = false; _u = false; _d = true
         self.parent.role:idle()
+        self.parent:showWarn()
     elseif _situation == Const.lRoad then
         _l = false; _r = false; _u = false; _d = false
         self:turn(Const.left)
@@ -515,18 +511,22 @@ function Wall:checkMove()
     elseif _situation == Const.luRoad then
         _l = true; _r = false; _u = true; _d = false
         self.parent.role:idle()
+        self.parent:showWarn()
     elseif _situation == Const.rRoad then
         _l = false; _r = false; _u = false; _d = false
         self:turn(Const.right)
     elseif _situation == Const.lrRoad then
         _l = true; _r = true; _u = false; _d = false
         self.parent.role:idle()
+        self.parent:showWarn()
     elseif _situation == Const.urRoad then
         _l = false; _r = true; _u = true; _d = false
         self.parent.role:idle()
+        self.parent:showWarn()
     elseif _situation == Const.lurRoad then
         _l = true; _r = true; _u = true; _d = false
         self.parent.role:idle()
+        self.parent:showWarn()
     end
     self.parent:greyUBtn(_u)
     self.parent:greyLBtn(_l)
@@ -558,11 +558,12 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-            self.pirouette = true
             if self:checkNum(_x-1, _y) then
+                self.pirouette = true
                 _situation = 1 + _situation
             end
             if self:checkNum(_x+1, _y) then
+                self.pirouette = true
                 _situation = 4 + _situation
             end
         end
@@ -586,11 +587,12 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-            self.pirouette = true
             if self:checkNum(_x, _y-1) then
+                self.pirouette = true
                 _situation = 1 + _situation
             end
             if self:checkNum(_x, _y+1) then
+                self.pirouette = true
                 _situation = 4 + _situation
             end
         end
@@ -615,11 +617,12 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-            self.pirouette = true
             if self:checkNum(_x+1, _y) then
+                self.pirouette = true
                 _situation = 1 + _situation
             end
             if self:checkNum(_x-1, _y) then
+                self.pirouette = true
                 _situation = 4 + _situation
             end
         end
@@ -643,16 +646,17 @@ function Wall:checkAround(_x, _y, _direction)
                 _situation = 2 + _situation
             end
         else
-            self.pirouette = true
             if self:checkNum(_x, _y+1) then
+                self.pirouette = true
                 _situation = 1 + _situation
             end
             if self:checkNum(_x, _y-1) then
+                self.pirouette = true
                 _situation = 4 + _situation
             end
         end
     end
-    print(_situation, "_situation",debug.traceback())
+    print(_situation, "_situation")
     return _situation
 end
 
@@ -674,27 +678,28 @@ function Wall:checkStart()
     --     end
     -- end
     local _x, _y = self.startPoint.x, self.startPoint.y
-    if self.config[_x][_y+1] then
+
+    if self:checkNum(_x, _y+1) then
         self.direction = Const.up
-    elseif self.config[_x][_y-1] then
+    elseif self:checkNum(_x, _y-1) then
         self.direction = Const.down
-    elseif self.config[_x-1][_y] then
+    elseif self:checkNum(_x-1, _y) then
         self.direction = Const.left
-    elseif self.config[_x+1][_y] then
+    elseif self:checkNum(_x+1, _y) then
         self.direction = Const.right
     end
     if self.direction == Const.up then
-        self:checkShowPoint(self.startPoint.x, self.startPoint.y + 1)
+        self:checkShowPoint(_x, _y + 1)
     elseif self.direction == Const.left then
-        self:checkShowPoint(self.startPoint.x - 1, self.startPoint.y)
+        self:checkShowPoint(_x - 1, _y)
         self:changeAnchorPoint()
         self:setRotation(90)
     elseif self.direction == Const.right then
-        self:checkShowPoint(self.startPoint.x + 1, self.startPoint.y)
+        self:checkShowPoint(_x + 1, _y)
         self:changeAnchorPoint()
         self:setRotation(-90)
     elseif self.direction == Const.down then
-        self:checkShowPoint(self.startPoint.x, self.startPoint.y - 1)
+        self:checkShowPoint(_x, _y - 1)
         self:changeAnchorPoint()
         self:setRotation(180)
     end
