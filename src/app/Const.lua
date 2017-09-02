@@ -10,13 +10,14 @@ cc.exports.Const = {
 	up = 2,
 	right= 3,
 
-	start = 1,
-	ended = 2,
-	drag = 3,
-	road = 4,
+	start = 3,
+	ended = 4,
+	drag = 2,
+	road = 1,
 	clean = 5,
 
 	speed = 0.8,
+	roSpeed = 0.3,
 
 	idle = 1,
 	move = 2,
@@ -30,4 +31,8 @@ cc.exports.Const = {
 	lrRoad = 5,
 	urRoad = 6,
 	lurRoad = 7,
+
+	Layer = {
+		max = 999
+	},
 }

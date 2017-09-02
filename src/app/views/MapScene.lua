@@ -177,7 +177,7 @@ function MapScene:showWarn()
     _text1 = _config[_index].text1
     _name = _config[_index].name
     if not self.text then
-        self.text = cc.Label:createWithTTF("", "simsun.ttf", 40)
+        self.text = cc.Label:createWithTTF("", "simsun.ttf", 28)
             :setTextColor(display.COLOR_BLACK)
             :enableOutline(cc.c4b(255,255,255,255),1)
             :addTo(_layer)
@@ -187,7 +187,7 @@ function MapScene:showWarn()
         self.text:setString(_text)
     end
     if not self.text1 then
-        self.text1 = cc.Label:createWithTTF("", "simsun.ttf", 40)
+        self.text1 = cc.Label:createWithTTF("", "simsun.ttf", 28)
             :setTextColor(display.COLOR_BLACK)
             :enableOutline(cc.c4b(255,255,255,255),1)
             :move(0, -45)
@@ -199,7 +199,7 @@ function MapScene:showWarn()
         self.text1:setString(_text1)
     end
     if not self.name then
-        self.name = cc.Label:createWithTTF("", "simsun.ttf", 40)
+        self.name = cc.Label:createWithTTF("", "simsun.ttf", 28)
             :setTextColor(display.COLOR_BLACK)
             :enableOutline(cc.c4b(255,255,255,255),1)
             :addTo(_layer)

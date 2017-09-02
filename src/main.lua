@@ -2,6 +2,8 @@
 cc.FileUtils:getInstance():setPopupNotify(false)
 cc.FileUtils:getInstance():addSearchPath(cc.FileUtils:getInstance():getWritablePath(), true)
 
+require "socket"
+require "socket.http"
 require "config"
 require "cocos.init"
 
@@ -11,5 +13,10 @@ end
 
 local status, msg = xpcall(main, __G__TRACKBACK__)
 if not status then
-    print(msg)
+		local logText = string.format(
+	[[----------------------------------------
+	LUA ERROR: %s
+	%s
+	----------------------------------------]], tostring(msg), debug.traceback())
+    print(logText)
 end

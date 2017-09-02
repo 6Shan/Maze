@@ -149,3 +149,40 @@ function Utils.getAllConfig(configType)
 	end
 	return nil
 end
+
+function Utils.showCenterTip(text)
+	if self.panel then
+    	self.panel:stopAllActions()
+    else
+    	self.panel = cc.LayerColor:create(cc.c4b(0, 0, 255, 255))
+    	self.tipText = cc.Label:createWithTTF("", "simsun.ttf", 28)
+    	self.panel:addChild(self.tipText)
+    	if display.getRunningScene() then
+            display.getRunningScene():addChild(self.panel, Const.Layer.max)
+        else
+        	return
+        end
+    end
+	
+	self.tipText:setString(text)
+	self.panel:setPosition(display.cx, display.cy + 50)
+	
+	local s = self.tipText:getContentSize()
+	s.width = s.width + 50
+	s.height = self.panel:getContentSize().height
+	self.panel:setContentSize(s)
+	self.tipText:setPosition(s.width / 2, s.height / 2)
+	
+	self.panel:setScale(0, 0)
+    
+	local move = cc.MoveTo:create(0.2, display.center)
+	local scale = cc.ScaleTo:create(0.2, 1.2)
+    local callBack = cc.CallFunc:create(function()
+	    	if self.panel then
+		    	self.panel:removeFromParent()
+		    	self.panel = nil
+		    end
+    	end)
+    local seq = cc.Sequence:create(cc.Spawn:create(move, scale), cc.ScaleTo:create(0.1, 1), cc.DelayTime:create(1.5), cc.FadeOut:create(0.5), callBack)
+    self.panel:runAction(seq)
+end

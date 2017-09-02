@@ -1,0 +1,1 @@
+G:\QQDownload\cocos2d-x-3.15\tools\cocos2d-console\bin\cocos.bat compile -p android --compile-script 1 --lua-encrypt --lua-encrypt-key maze --lua-encrypt-sign shan -m release

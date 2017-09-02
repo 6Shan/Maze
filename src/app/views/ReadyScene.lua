@@ -88,12 +88,23 @@ function ReadyScene:init(mapID)
             :addTo(self)
         return
     end
-
-    self.pointHeight = height or 54
-    self.editHeight = editHeight or 530
-    self.mapHeight = mapHeight or 1350
+    local _lenX = #self.config
+    local _lenY = #self.config[1]
+    self._midX = 0
+    self._midY = 0
+    self.pointHeight = 25
+    self.editHeight = 550
+    if _lenX < 13 and _lenY < 13 then
+        self._midX = math.floor((13 - _lenX) / 2)
+        self._midY = math.floor((13 - _lenY) / 2)
+        self.mapHeight = 325
+    else
+        local _mapSize = _lenX > _lenY and _lenX or _lenY
+        self._midX = math.floor((_mapSize - _lenX) / 2)
+        self._midY = math.floor((_mapSize - _lenY) / 2)
+        self.mapHeight = self.pointHeight * _mapSize
+    end
     self.minScale = self.editHeight / self.mapHeight
-    self.maxScale = 1
     self.pointHeightHalf = self.pointHeight / 2
     local _editSize = cc.size(self.editHeight, self.editHeight)
     local _mapHeight = cc.size(self.mapHeight, self.mapHeight)
@@ -101,7 +112,7 @@ function ReadyScene:init(mapID)
             :setAnchorPoint(cc.p(0.5, 0.5))
             :move(display.center)
             :setContentSize(_editSize)
-            :setInnerContainerSize(_mapHeight)
+            -- :setInnerContainerSize(_mapHeight)
             :setDirection(cc.SCROLLVIEW_DIRECTION_HORIZONTAL)
             :addTo(self)
             :setTouchEnabled(false)
@@ -116,7 +127,7 @@ function ReadyScene:init(mapID)
                     :setAnchorPoint(cc.p(0, 0))
                     :setContentSize(_mapHeight)
                     :addTo(_node)
-    self.editMap:setInnerContainerSize(cc.size(self.mapHeight * self.minScale, self.mapHeight * self.minScale))
+    -- self.editMap:setInnerContainerSize(cc.size(self.mapHeight * self.minScale, self.mapHeight * self.minScale))
 
     self.lineNode = cc.DrawNode:create()
                     :addTo(self.mapLayer)
@@ -129,11 +140,11 @@ function ReadyScene:init(mapID)
         for j=1,_total do
             self.mapArray[i][j] = 0
         end
-        self.lineNode:drawLine(cc.p(0, self.pointHeight * i), cc.p(1350, self.pointHeight * i), cc.c4f(0, 0, 0, 0.5))
+        self.lineNode:drawLine(cc.p(0, self.pointHeight * i), cc.p(self.mapHeight, self.pointHeight * i), cc.c4f(0, 0, 0, 0.5))
     end
 
     for i=0,_total do
-        self.lineNode:drawLine(cc.p(self.pointHeight * i, 0), cc.p(self.pointHeight * i, 1350), cc.c4f(0, 0, 0, 0.5))
+        self.lineNode:drawLine(cc.p(self.pointHeight * i, 0), cc.p(self.pointHeight * i, self.mapHeight), cc.c4f(0, 0, 0, 0.5))
     end
 
 end
@@ -147,9 +158,12 @@ function ReadyScene:changeMaze(total, mapType)
  
     for i=1,total do
         for j=1,total do
+            if not self.config[i] then
+                return
+            end
             local _state = self.config[i][j]
-            local _x = self.pointHeight * i
-            local _y = self.pointHeight * j
+            local _x = self.pointHeight * (i+self._midX-1)
+            local _y = self.pointHeight * (j+self._midY-1)
 
             if _state == Const.start and mapType ~= 2 then
                     self.lineNode:drawSolidRect(cc.p(_x, _y),

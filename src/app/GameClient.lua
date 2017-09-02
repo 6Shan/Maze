@@ -1,62 +1,40 @@
 cc.exports.GameClient = {}
 
-function GameClient.printTable(...)
-	-- if __HIDE_TEST__ then return end
+function GameClient:showCenterTip(text)
+	if self.panel then
+    	self.panel:stopAllActions()
+    	self.panel:setOpacity(255)
+    else
+    	self.panel = cc.LayerColor:create(cc.c4b(0, 0, 0, 255))
+    	self.tipText = cc.Label:createWithTTF("", "simsun.ttf", 28)
+    	self.panel:addChild(self.tipText)
+    	if display.getRunningScene() then
+            display.getRunningScene():addChild(self.panel, Const.Layer.max)
+        else
+        	return
+        end
+    end
 	
-	local args = {...}
-	local fromIndex = 1
-
-	for i = fromIndex, #args do
-		local root = args[i]
-		if type(root) == "table" then
-			local temp = {
-				"----------------printTable start----------------------------\n",
-				tostring(root).."={\n",
-			}
-			local function table2String(t, depth)
-				if type(depth) == "number" then 
-					depth = depth + 1
-					if depth >= 5 then
-						return
-					end
-				else
-					depth = 1
-				end
-				local indent = ""
-				for i=1, depth do
-					indent = indent .. "\t"
-				end
-
-				for k, v in pairs(t) do
-					local key = tostring(k)
-					local typeV = type(v)
-					if typeV == "table" then
-						table.insert(temp, indent..key.."={\n")
-						table2String(v, depth)
-						table.insert(temp, indent.."},\n")
-					elseif typeV == "string" then
-						table.insert(temp, string.format("%s%s=\"%s\",\n", indent, key, tostring(v)))
-					else
-						table.insert(temp, string.format("%s%s=%s,\n", indent, key, tostring(v)))
-					end
-				end
-			end
-			table2String(root)
-			table.insert(temp, "}\n-----------------------------------printTable end------------------------------")
-			
-			if fromIndex == 2 then
-				print(args[1], table.concat(temp))
-			else
-				print(table.concat(temp))
-			end
-			
-		else
-			if fromIndex == 2 then
-				print(args[1], tostring(root))
-			else
-				print(tostring(root))
-			end
-			
-		end
-	end
+	self.tipText:setString(text)
+	
+	local s = self.tipText:getContentSize()
+	s.width = s.width + 50
+	s.height = 50
+	self.panel:setContentSize(s)
+	local _width = s.width / 2
+	local _height = s.height / 2
+	self.tipText:setPosition(_width, _height)
+	self.panel:setScale(0, 0)
+	self.panel:setPosition(display.cx - _width, display.cy + 50)
+    
+	local move = cc.MoveTo:create(0.2, cc.p(display.cx - _width, display.cy - _height))
+	local scale = cc.ScaleTo:create(0.2, 1.2)
+    local callBack = cc.CallFunc:create(function()
+	    	if self.panel then
+		    	self.panel:removeFromParent()
+		    	self.panel = nil
+		    end
+    	end)
+    local seq = cc.Sequence:create(cc.Spawn:create(move, scale), cc.ScaleTo:create(0.1, 1), cc.DelayTime:create(1.5), cc.FadeOut:create(0.5), callBack)
+    self.panel:runAction(seq)
 end

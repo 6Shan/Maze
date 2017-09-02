@@ -14,8 +14,12 @@ function Wall:init(parent)
     -- self:checkShowPoint(self.startPoint.x, self.startPoint.y + 1)
     self.mapXLen = #self.mapData
     self.mapYLen = #self.mapData[1]
+    if self.mapXLen > self.mapYLen then
+
+    end
     self.mapWidth = self.mapXLen * Const.wallHeight
     self.mapHeight = self.mapYLen * Const.wallHeight
+    print(self.mapWidth, self.mapHeight, "sldflsdlfl")
     self:setContentSize(cc.size(self.mapWidth, self.mapHeight))
     self.mapScale = 1 / self.mapXLen
     self:checkStart()
@@ -317,9 +321,9 @@ function Wall:turn(direction)
         self.pirouette = nil
         self:changeAnchorPoint()
         if direction == Const.left then
-            _rotate = cc.RotateBy:create(Const.speed, 90)
+            _rotate = cc.RotateBy:create(Const.roSpeed, 90)
         else
-            _rotate = cc.RotateBy:create(Const.speed, -90)
+            _rotate = cc.RotateBy:create(Const.roSpeed, -90)
         end
         self.direction = _nextDir
         local _call = cc.CallFunc:create(function ()
@@ -359,7 +363,7 @@ function Wall:turn(direction)
             self.direction = Const.up
             self:checkShowPoint(self.idleX + 1, self.idleY)
         end
-        _rotate = cc.RotateBy:create(Const.speed * 2, 90)
+        _rotate = cc.RotateBy:create(Const.roSpeed, 90)
     else
         if self.direction == Const.up then
             self.direction = Const.right
@@ -374,7 +378,7 @@ function Wall:turn(direction)
             self.direction = Const.down
             self:checkShowPoint(self.idleX + 1, self.idleY)
         end
-        _rotate = cc.RotateBy:create(Const.speed * 2, -90)
+        _rotate = cc.RotateBy:create(Const.roSpeed, -90)
     end
     local _move = cc.MoveBy:create(Const.speed, cc.p(0, -Const.wallHeight))
     local _delay = cc.DelayTime:create(0.3)
@@ -441,7 +445,7 @@ function Wall:reverse()
         self.direction = Const.left
     end
     self:changeAnchorPoint()
-    local _rotate = cc.RotateBy:create(Const.speed, 180)
+    local _rotate = cc.RotateBy:create(Const.roSpeed, 180)
     local _call = cc.CallFunc:create(function ()
         self:checkMove()
     end)
